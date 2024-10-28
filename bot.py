@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 import server
-import config
 import os
 from commands import (  # Import all action commands
     kiss, lick, hug, pat, poke,
