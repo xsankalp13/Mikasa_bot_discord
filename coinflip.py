@@ -2,25 +2,14 @@ import discord
 from discord.ext import commands
 import random
 import os
+from balances import read_balances, write_balances
+
 
 # File to store user balances
 BALANCE_FILE = "balances.txt"
 
 # Helper function to read balances from the file
-def read_balances():
-    balances = {}
-    if os.path.exists(BALANCE_FILE):
-        with open(BALANCE_FILE, "r") as f:
-            for line in f:
-                name, money = line.strip().split()
-                balances[name] = int(money)
-    return balances
 
-# Helper function to write balances to the file
-def write_balances(balances):
-    with open(BALANCE_FILE, "w") as f:
-        for name, money in balances.items():
-            f.write(f"{name} {money}\n")
 
 # Command to check balance or give initial 100k if user is new
 @commands.command(name="cash")

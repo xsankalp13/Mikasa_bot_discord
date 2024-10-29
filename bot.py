@@ -8,8 +8,9 @@ from commands import (  # Import all action commands
     cuddle, thumbsup
 )
 
-from coinflip import check_balance, coinflip, give_cash   # Import coin flip commands
+from coinflip import check_balance, coinflip, give_cash    # Import coin flip commands
 from chat import chat  # Import the chat command
+from balances import get_top_balances, transfer_cash  # Import the get_top_balances function
 
 # Set up intents
 intents = discord.Intents.default()
@@ -24,12 +25,26 @@ bot.add_command(check_balance)
 bot.add_command(coinflip)
 bot.add_command(give_cash)
 
+# Define the transfer command
+bot.add_command(transfer_cash)
+
+# Define the top command
+bot.add_command(get_top_balances)
+
+
 # Add the chat command to the bot
 bot.add_command(chat)  
 
 @bot.event
 async def on_ready():
     print(f"We have logged in as {bot.user}")
+
+
+
+
+
+
+
 
 @bot.command(name="bothelp")
 async def bot_help(ctx):
