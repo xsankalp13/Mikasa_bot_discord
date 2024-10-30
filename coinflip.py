@@ -1,15 +1,10 @@
 import discord
 from discord.ext import commands
 import random
-import os
 from balances import read_balances, write_balances
-
 
 # File to store user balances
 BALANCE_FILE = "balances.txt"
-
-# Helper function to read balances from the file
-
 
 # Command to check balance or give initial 100k if user is new
 @commands.command(name="cash")
@@ -18,11 +13,12 @@ async def check_balance(ctx):
     balances = read_balances()
 
     if user_id not in balances:
-        balances[user_id] = 100000  # Grant initial 100k for first-time users
+        # Store user info in a dict
+        balances[user_id] = {"nickname": ctx.author.display_name, "money": 100000}
         write_balances(balances)
         await ctx.send(f"Welcome, {ctx.author.mention}! 🎉 You have been given an initial cash of 100k!")
     else:
-        await ctx.send(f"{ctx.author.mention}, you have {balances[user_id]:,} cash available.")
+        await ctx.send(f"{ctx.author.mention}, you have {balances[user_id]['money']:,} cash available.")
 
 # Command to place a bet on heads/tails with the specified amount
 @commands.command(name="cf")
@@ -32,12 +28,12 @@ async def coinflip(ctx, amount: int, side: str = "heads"):
 
     # Ensure user has an initial balance if not already set
     if user_id not in balances:
-        balances[user_id] = 100000  # Give 100k for first-time users
+        balances[user_id] = {"nickname": ctx.author.display_name, "money": 100000}
         write_balances(balances)
         await ctx.send(f"Welcome, {ctx.author.mention}! 🎉 You have been given an initial cash of 100k!")
 
     # Check if user has enough money
-    if balances[user_id] < amount:
+    if balances[user_id]['money'] < amount:
         await ctx.send(f"{ctx.author.mention}, you don’t have enough cash to bet {amount}!")
         return
 
@@ -49,10 +45,10 @@ async def coinflip(ctx, amount: int, side: str = "heads"):
     # Perform the coin flip
     flip_result = random.choice(["heads", "tails"])
     if flip_result == side:
-        balances[user_id] += amount  # Win: Double the money
+        balances[user_id]['money'] += amount  # Win: Double the money
         result_message = f"🪙 It's {flip_result}! You won {amount} cash, {ctx.author.mention}! 🎉"
     else:
-        balances[user_id] -= amount  # Lose: Deduct the money
+        balances[user_id]['money'] -= amount  # Lose: Deduct the money
         result_message = f"🪙 It's {flip_result}. You lost {amount} cash, {ctx.author.mention}. 😢"
 
     # Update and save the new balance
@@ -67,7 +63,7 @@ async def give_cash(ctx, user: discord.Member, amount: int):
     balances = read_balances()
 
     # Ensure the giver has enough balance
-    if user_id not in balances or balances[user_id] < amount:
+    if user_id not in balances or balances[user_id]['money'] < amount:
         await ctx.send(f"{ctx.author.mention}, you don't have enough cash to give!")
         return
 
@@ -78,9 +74,11 @@ async def give_cash(ctx, user: discord.Member, amount: int):
             if interaction.user != ctx.author:
                 await interaction.response.send_message("Only the initiator can confirm this action.", ephemeral=True)
                 return
+            
             # Transfer the amount
-            balances[user_id] -= amount
-            balances[recipient_id] = balances.get(recipient_id, 0) + amount
+            balances[user_id]['money'] -= amount
+            balances[recipient_id] = balances.get(recipient_id, {"nickname": user.display_name, "money": 0})
+            balances[recipient_id]['money'] += amount
             write_balances(balances)
             await interaction.response.send_message(f"{ctx.author.mention} gave {amount} cash to {user.mention}.")
             self.stop()

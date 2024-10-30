@@ -1,4 +1,3 @@
-import discord
 from discord.ext import commands
 import random
 
@@ -23,8 +22,8 @@ def generate_response(message,ctx):
     # Check for love-related messages
     love_phrases = ["i love you", "ily", "i love u", "love you", "i <3 you"]
     if any(phrase in message_lower for phrase in love_phrases):
-        if ctx.author.id != 1217740464971579432:
-            return f"Hey {ctx.author.mention}, listen carefully I only love Riri ❤️"
+        # if ctx.author.id != 1217740464971579432:
+        #     return f"Hey {ctx.author.mention}, listen carefully I only love Riri ❤️"
         return f"Hey {ctx.author.mention} baby, I love you too! ❤️"
 
     # Check for other keywords

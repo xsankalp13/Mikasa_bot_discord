@@ -83,4 +83,69 @@ async def thumbsup(ctx, user: discord.Member):
     """Command to give a thumbs up to another user."""
     await send_action_response(ctx, "thumbsup", user)
 
+@commands.command(name="kill")
+async def kill(ctx, user: discord.Member):
+    """Command kill to another user."""
+    await send_action_response(ctx, "kill", user)
+
+@commands.command(name="wave")
+async def wave(ctx, user: discord.Member):
+    """Command to give a wave to another user."""
+    await send_action_response(ctx, "wave", user)
+
+@commands.command(name="tickle")
+async def tickle(ctx, user: discord.Member):
+    """Command to tickle to another user."""
+    await send_action_response(ctx, "tickle", user)
+
+@commands.command(name="stab")
+async def stab(ctx, user: discord.Member):
+    """Command to stab a another user."""
+    await send_action_response(ctx, "stab", user)
+
+@commands.command(name="shoot")
+async def shoot(ctx, user: discord.Member):
+    """Command to shoot a another user."""
+    await send_action_response(ctx, "shoot", user)
+
+@commands.command(name="punch")
+async def punch(ctx, user: discord.Member):
+    """Command to punch to another user."""
+    await send_action_response(ctx, "punch", user)
+
+@commands.command(name="kick")
+async def kick(ctx, user: discord.Member):
+    """Command to kick to another user."""
+    await send_action_response(ctx, "kick", user)
+
+@commands.command(name="handhold")
+async def handhold(ctx, user: discord.Member):
+    """Command to handhold to another user."""
+    await send_action_response(ctx, "handhold", user)
+
+@commands.command(name="love")
+async def love(ctx, user: discord.Member):
+    """Command to love to another user."""
+    await send_action_response(ctx, "love", user)
+
+@commands.command(name="bite")
+async def bite(ctx, user: discord.Member):
+    """Command to bite to another user."""
+    await send_action_response(ctx, "bite", user)
+
+@commands.command(name="airkiss")
+async def airkiss(ctx, user: discord.Member):
+    """Command to give a airkiss to another user."""
+    await send_action_response(ctx, "airkiss", user)
+
+@commands.command(name="spank")
+async def spank(ctx, user: discord.Member):
+    """Command to spank to another user."""
+    await send_action_response(ctx, "spank", user)
+
+@commands.command(name="suicide")
+async def suicide(ctx, user: discord.Member):
+    """Command to suicide to another user."""
+    await send_action_response(ctx, "suicide", user)
+
 # Add more action commands as needed

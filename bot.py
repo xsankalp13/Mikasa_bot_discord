@@ -5,7 +5,9 @@ import os
 from commands import (  # Import all action commands
     kiss, lick, hug, pat, poke,
     nuzzle, slap, smack, dance,
-    cuddle, thumbsup
+    cuddle, thumbsup, kill, wave, tickle, 
+    stab, shoot,punch, kick, handhold,
+    love, bite, airkiss, spank, suicide
 )
 
 from coinflip import check_balance, coinflip, give_cash    # Import coin flip commands
@@ -38,13 +40,6 @@ bot.add_command(chat)
 @bot.event
 async def on_ready():
     print(f"We have logged in as {bot.user}")
-
-
-
-
-
-
-
 
 @bot.command(name="bothelp")
 async def bot_help(ctx):
@@ -81,6 +76,19 @@ bot.add_command(smack)
 bot.add_command(dance)
 bot.add_command(cuddle)
 bot.add_command(thumbsup)
+bot.add_command(kill)
+bot.add_command(wave)
+bot.add_command(tickle)
+bot.add_command(stab)
+bot.add_command(shoot)
+bot.add_command(punch)
+bot.add_command(kick)
+bot.add_command(handhold)
+bot.add_command(love)
+bot.add_command(bite)
+bot.add_command(airkiss)
+bot.add_command(spank)
+bot.add_command(suicide)
 
 
 

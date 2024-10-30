@@ -77,4 +77,3 @@ async def transfer_cash(ctx, user: discord.Member, amount: int):
             self.stop()
 
     await ctx.send(f"{ctx.author.mention} wants to transfer {amount} Mikasa Cash to {user.mention}. Confirm?", view=ConfirmTransfer())
-
