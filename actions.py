@@ -34,7 +34,7 @@ TENOR_API_KEY = os.getenv("TENOR_API_KEY")
 def get_gif_url(query):
     """Fetches a GIF URL from Tenor API based on the action query."""
     random_number = random.randint(0, 50)
-    url = f"https://g.tenor.com/v1/search?q=anime-{query}-couple&key={TENOR_API_KEY}&pos={random_number}&limit=1&media_filter=minimal"
+    url = f"https://g.tenor.com/v1/search?q=anime-{query}-cute&key={TENOR_API_KEY}&pos={random_number}&limit=1&media_filter=minimal"
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()

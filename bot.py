@@ -13,6 +13,7 @@ from commands import (  # Import all action commands
 from coinflip import check_balance, coinflip, give_cash    # Import coin flip commands
 from chat import chat  # Import the chat command
 from balances import get_top_balances, transfer_cash  # Import the get_top_balances function
+from truth_dare_situation import truth_dare_game #
 
 # Set up intents
 intents = discord.Intents.default()
@@ -92,7 +93,8 @@ bot.add_command(suicide)
 
 
 
-
+# Add the game command to the bot
+bot.add_command(truth_dare_game)
 
 
 # Run the Server
