@@ -31,7 +31,7 @@ MODELS = {
     "sarvam": ("sarvam", "sarvam-m"),
 }
 
-DEFAULT_MODEL = "gemini-flash"
+DEFAULT_MODEL = "gpt-4o-mini"
 
 # ── System prompt ──
 SYSTEM_PROMPT = (
@@ -46,6 +46,77 @@ SYSTEM_PROMPT = (
     "You are NOT an AI assistant. You are Mikasa, just a girl from Pune hanging out."
 )
 
+def get_system_prompt() -> str:
+    tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    now = datetime.datetime.now(tz_ist)
+    time_context = f"\n\n[SYSTEM CONTEXT: The current true date and time is {now.strftime('%I:%M %p %A, %B %d %Y IST')}. Base all your temporal knowledge and time-relative searches on THIS date.]"
+    return SYSTEM_PROMPT + time_context
+
+
+# ── AI Tools ─────────────────────────────────────────────
+async def get_current_ist_time() -> str:
+    """Returns the current time in IST (UTC+5:30)."""
+    tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+    now = datetime.datetime.now(tz_ist)
+    return f"Current IST Time: {now.strftime('%I:%M %p, %A, %B %d, %Y')}"
+
+async def search_tavily(session: aiohttp.ClientSession, query: str) -> str:
+    """Searches the web using Tavily API."""
+    api_key = os.getenv("TAVILY_API_KEY")
+    if not api_key:
+        return "Error: TAVILY_API_KEY not configured in environment."
+    
+    url = "https://api.tavily.com/search"
+    payload = {
+        "api_key": api_key,
+        "query": query,
+        "search_depth": "basic",
+        "include_answer": True,
+        "max_results": 2
+    }
+    try:
+        async with session.post(url, json=payload) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                return data.get("answer") or "\n".join([r.get("content", "") for r in data.get("results", [])])
+            else:
+                return f"Tavily API error: {resp.status}"
+    except Exception as e:
+        return f"Tavily search failed: {e}"
+
+TOOLS_SCHEMA = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_current_ist_time",
+            "description": "Get the current date and time in India Standard Time (IST). Use this when the user asks about the current time or Date.",
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_tavily",
+            "description": "Search the web for current events, news, or specific information that you don't know.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The search query to look up on the web."
+                    }
+                },
+                "required": ["query"]
+            }
+        }
+    }
+]
+
+
 
 class ChatCog(commands.Cog, name="Chat"):
     """Cog for AI-powered chat with Mikasa using multiple LLM providers."""
@@ -55,6 +126,7 @@ class ChatCog(commands.Cog, name="Chat"):
         self.session: aiohttp.ClientSession | None = None
         self.current_model = DEFAULT_MODEL
         self.supabase: Client = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
+        self.active_sessions: set[int] = set()
 
     async def cog_load(self):
         self.session = aiohttp.ClientSession()
@@ -108,7 +180,7 @@ class ChatCog(commands.Cog, name="Chat"):
 
         payload = {
             "contents": contents,
-            "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
+            "systemInstruction": {"parts": [{"text": get_system_prompt()}]},
             "generationConfig": {"maxOutputTokens": 512, "temperature": 0.8},
         }
         async with self.session.post(url, json=payload) as resp:
@@ -128,24 +200,60 @@ class ChatCog(commands.Cog, name="Chat"):
         url = "https://api.openai.com/v1/chat/completions"
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        messages = [{"role": "system", "content": get_system_prompt()}]
         for msg in history:
             messages.append({"role": msg["role"], "content": msg["content"]})
 
-        payload = {
-            "model": model_id,
-            "messages": messages,
-            "max_tokens": 512,
-            "temperature": 0.8,
-        }
-        async with self.session.post(url, json=payload, headers=headers) as resp:
-            if resp.status == 200:
+        import json
+
+        # Loop to handle possible multiple recursive tool calls
+        for _ in range(5): # Max 5 tool calls deep
+            payload = {
+                "model": model_id,
+                "messages": messages,
+                "max_tokens": 512,
+                "temperature": 0.8,
+                "tools": TOOLS_SCHEMA,
+                "tool_choice": "auto"
+            }
+            async with self.session.post(url, json=payload, headers=headers) as resp:
+                if resp.status != 200:
+                    error = await resp.text()
+                    print(f"OpenAI API error: {error}")
+                    return "Something went wrong with OpenAI. 😢"
+                
                 data = await resp.json()
-                return data["choices"][0]["message"]["content"]
-            else:
-                error = await resp.text()
-                print(f"OpenAI API error: {error}")
-                return "Something went wrong with OpenAI. 😢"
+                response_message = data["choices"][0]["message"]
+                
+                # If there are tool calls, we must execute them and append to messages
+                if response_message.get("tool_calls"):
+                    messages.append(response_message)
+                    for tool_call in response_message["tool_calls"]:
+                        func_name = tool_call["function"]["name"]
+                        args_str = tool_call["function"]["arguments"]
+                        try:
+                            args = json.loads(args_str)
+                        except json.JSONDecodeError:
+                            args = {}
+                            
+                        # Execute the tool
+                        print(f"Executing tool {func_name} with args {args}")
+                        tool_result = "Error: Tool not found."
+                        if func_name == "get_current_ist_time":
+                            tool_result = await get_current_ist_time()
+                        elif func_name == "search_tavily":
+                            tool_result = await search_tavily(self.session, args.get("query", ""))
+                            
+                        messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call["id"],
+                            "content": str(tool_result)
+                        })
+                    # Loop continues and calls OpenAI again with the tool output
+                else:
+                    return response_message["content"]
+        
+        return "Sorry, I got confused while thinking! 😭"
 
     async def _call_grok(self, model_id: str, history: list) -> str:
         api_key = os.getenv("GROK_API_KEY")
@@ -155,7 +263,7 @@ class ChatCog(commands.Cog, name="Chat"):
         url = "https://api.x.ai/v1/chat/completions"
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        messages = [{"role": "system", "content": get_system_prompt()}]
         for msg in history:
             messages.append({"role": msg["role"], "content": msg["content"]})
 
@@ -182,7 +290,7 @@ class ChatCog(commands.Cog, name="Chat"):
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
         
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        messages = [{"role": "system", "content": get_system_prompt()}]
         for msg in history:
             messages.append({"role": msg["role"], "content": msg["content"]})
 
@@ -209,7 +317,7 @@ class ChatCog(commands.Cog, name="Chat"):
         url = "https://api.sarvam.ai/v1/chat/completions"
         headers = {"api-subscription-key": api_key, "Content-Type": "application/json"}
         
-        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        messages = [{"role": "system", "content": get_system_prompt()}]
         for msg in history:
             messages.append({"role": msg["role"], "content": msg["content"]})
 
@@ -273,24 +381,60 @@ class ChatCog(commands.Cog, name="Chat"):
 
         async with ctx.typing():
             full_response = await self._get_ai_response(ctx.author.id, message)
+            
+        self.active_sessions.add(ctx.author.id)
 
-        # Split into multiple "human" messages
+        await self._send_ai_parts(ctx.channel, ctx.message, full_response)
+
+    async def _send_ai_parts(self, send_target, reply_target, full_response: str):
         if "|||" in full_response:
             parts = [p.strip() for p in full_response.split("|||") if p.strip()]
         else:
-            # Fallback for standard formatting
             parts = [p.strip() for p in full_response.split("\n") if p.strip()]
 
         for i, part in enumerate(parts):
             if i > 0:
-                # Add a natural "typing" pause based on message length
-                async with ctx.typing():
+                async with send_target.typing():
                     pause = min(len(part) * 0.05, 2.0)
                     import asyncio
                     await asyncio.sleep(pause)
-                await ctx.send(part)
+                await send_target.send(part)
             else:
-                await ctx.message.reply(part)
+                await reply_target.reply(part)
+
+    @commands.command(name="bye")
+    async def end_session(self, ctx: commands.Context):
+        """End the chat session with Mikasa. (Owner only)"""
+        if ctx.author.id != BOT_OWNER_ID:
+            return
+
+        if ctx.author.id in self.active_sessions:
+            self.active_sessions.remove(ctx.author.id)
+            await ctx.message.reply("biee biee 👋")
+        else:
+            await ctx.message.reply("Hum toh baat hi nahi kar rahe the! 🙄")
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message):
+        if message.author.bot:
+            return
+
+        # Check if user has an active session
+        if message.author.id in self.active_sessions:
+            content_lower = message.content.lower()
+            if content_lower.startswith("mika "):
+                # Don't overlap with normal bot commands
+                if content_lower.startswith("mikasa "):
+                    return
+
+                text = message.content[5:].strip()
+                if not text:
+                    return
+
+                async with message.channel.typing():
+                    full_response = await self._get_ai_response(message.author.id, text)
+
+                await self._send_ai_parts(message.channel, message, full_response)
 
     @commands.command(name="changeAI")
     async def change_ai(self, ctx: commands.Context, *, model_name: str = None):
