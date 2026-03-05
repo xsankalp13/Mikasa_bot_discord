@@ -1,4 +1,5 @@
 discord.py
-requests
+aiohttp
 Flask
 python-dotenv
+supabase
