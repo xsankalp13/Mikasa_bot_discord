@@ -27,7 +27,6 @@ ACTION_EMOJIS = {
     "lick": "👅", "kill": "💀", "kick": "🦶", "smile": "😊",
 }
 
-ALLOWED_USERS = [560132810556309525, 1217740464971579432, 756042354816712775, 763699750846857226]
 
 
 class ActionsCog(commands.Cog, name="Actions"):
@@ -83,13 +82,6 @@ class ActionsCog(commands.Cog, name="Actions"):
         return None
 
     async def _do_action(self, ctx: commands.Context, action: str, user: discord.Member):
-        if ctx.author.id not in ALLOWED_USERS:
-            embed = discord.Embed(
-                description=f"Hey {ctx.author.mention}, only my master can use these commands! 😠",
-                color=0xFF0000,
-            )
-            await ctx.send(embed=embed)
-            return
         if user == ctx.author:
             embed = discord.Embed(
                 description=f"You can't **{action}** yourself, silly! 🫠",

@@ -25,6 +25,7 @@ COGS = [
     "cogs.economy",
     "cogs.games",
     "cogs.chat",
+    "cogs.pokemon",
     "cogs.help",
     "cogs.errors",
 ]

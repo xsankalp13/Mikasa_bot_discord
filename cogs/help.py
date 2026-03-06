@@ -80,7 +80,7 @@ def _games_embed() -> discord.Embed:
 def _chat_embed() -> discord.Embed:
     embed = discord.Embed(
         title="💬  Chat",
-        description="AI-powered conversation with Mikasa! *(Owner only)*",
+        description="AI-powered conversation with Mikasa! *(Limit: 20 msgs/day)*",
         color=0xE91E63,
     )
     embed.add_field(
@@ -96,7 +96,43 @@ def _chat_embed() -> discord.Embed:
         ),
         inline=False,
     )
-    embed.set_footer(text="Mikasa Chat  •  Owner only", icon_url=MIKASA_ICON)
+    embed.set_footer(text="Mikasa Chat", icon_url=MIKASA_ICON)
+    return embed
+
+
+def _pokemon_embed() -> discord.Embed:
+    embed = discord.Embed(
+        title="🔴  Pokémon",
+        description="GBA-style Pokémon battles with wild encounters!",
+        color=0xE74C3C,
+    )
+    cmds = [
+        ("🎮  `Mikasa pokestart`", "Register as a trainer & get a starter"),
+        ("🔴  `Mikasa team`", "View your Pokémon team & bag"),
+        ("📖  `Mikasa pokedex <name>`", "Look up a Pokémon's stats"),
+        ("⚔️  `Mikasa pokechallenge @user`", "Challenge another trainer to PvP!"),
+        ("🏪  `Mikasa pokemart`", "Buy Pokéballs, Potions, Super Potions & Revives"),
+        ("💊  `Mikasa pokeheal [slot] [super]`", "Use a Potion/Super Potion on a Pokémon"),
+        ("💎  `Mikasa heal [slot]`", "Use a Revive on a fainted Pokémon"),
+        ("📦  `Mikasa pokemachine`", "View your stored Pokémon"),
+        ("🔄  `Mikasa pokeswap <slot> <id>`", "Swap a team Pokémon with a stored one"),
+    ]
+    for name, value in cmds:
+        embed.add_field(name=name, value=value, inline=False)
+    embed.add_field(
+        name="🌿  Wild Encounters",
+        value="Wild Pokémon appear in the designated channel every 3 minutes!",
+        inline=False,
+    )
+    embed.add_field(
+        name="👑  Admin Commands",
+        value=(
+            "`Mikasa pokemon spawn` — Set this channel for wild spawns\n"
+            "`Mikasa pokemon stop` — Stop wild spawns in this server"
+        ),
+        inline=False,
+    )
+    embed.set_footer(text="Mikasa Pokémon", icon_url=MIKASA_ICON)
     return embed
 
 
@@ -105,6 +141,7 @@ CATEGORY_EMBEDS = {
     "economy": _economy_embed,
     "games": _games_embed,
     "chat": _chat_embed,
+    "pokemon": _pokemon_embed,
 }
 
 
@@ -117,6 +154,7 @@ class HelpSelect(discord.ui.Select):
             discord.SelectOption(label="Economy", value="economy", emoji="💰", description="Mikasa Cash system"),
             discord.SelectOption(label="Games", value="games", emoji="🎲", description="Truth, Dare & more"),
             discord.SelectOption(label="Chat", value="chat", emoji="💬", description="Talk with Mikasa"),
+            discord.SelectOption(label="Pokémon", value="pokemon", emoji="🔴", description="Battle wild Pokémon!"),
         ]
         super().__init__(placeholder="Choose a category…", options=options)
 
@@ -148,7 +186,7 @@ class HelpCog(commands.Cog, name="Help"):
                 "Hey there! I'm **Mikasa** — your anime bot companion.\n\n"
                 "Use the **dropdown** below to explore my commands!\n\n"
                 "**📂  Categories**\n"
-                "⚔️ Actions  •  💰 Economy  •  🎲 Games  •  💬 Chat"
+                "⚔️ Actions  •  💰 Economy  •  🎲 Games  •  💬 Chat  •  🔴 Pokémon"
             ),
             color=MIKASA_COLOR,
         )

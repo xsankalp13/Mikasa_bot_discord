@@ -3,7 +3,8 @@ from discord.ext import commands
 import aiohttp
 import os
 import datetime
-from supabase import create_client, Client
+from supabase import create_client, Client, ClientOptions
+import httpx
 import config
 
 # ── Mikasa theme ──
@@ -16,8 +17,8 @@ BOT_OWNER_ID = 560132810556309525
 # Maps friendly names to (provider, actual_model_id)
 MODELS = {
     # Gemini
-    "gemini-flash": ("gemini", "gemini-2.0-flash"),
-    "gemini-pro": ("gemini", "gemini-2.0-flash-thinking-exp"),
+    "gemini-flash": ("gemini", "gemini-3.1-flash-lite-preview"),
+    "gemini-pro": ("gemini", "gemini-3-flash-preview"),
     # OpenAI
     "gpt-4o": ("openai", "gpt-4o"),
     "gpt-4o-mini": ("openai", "gpt-4o-mini"),
@@ -27,6 +28,7 @@ MODELS = {
     # Groq (fast inference — OpenAI-compatible API)
     "groq-llama": ("groq", "llama-3.3-70b-versatile"),
     "groq-scout": ("groq", "meta-llama/llama-4-scout-17b-16e-instruct"),
+    "groq-qwen": ("groq", "qwen/qwen3-32b"),
     # Sarvam AI (Indian language model)
     "sarvam": ("sarvam", "sarvam-m"),
 }
@@ -125,7 +127,14 @@ class ChatCog(commands.Cog, name="Chat"):
         self.bot = bot
         self.session: aiohttp.ClientSession | None = None
         self.current_model = DEFAULT_MODEL
-        self.supabase: Client = create_client(config.SUPABASE_URL, config.SUPABASE_KEY)
+        
+        http_client = httpx.Client(
+            http2=False,
+            limits=httpx.Limits(max_keepalive_connections=5, keepalive_expiry=5.0)
+        )
+        opts = ClientOptions(httpx_client=http_client)
+        self.supabase: Client = create_client(config.SUPABASE_URL, config.SUPABASE_KEY, options=opts)
+        
         self.active_sessions: set[int] = set()
 
     async def cog_load(self):
@@ -162,6 +171,26 @@ class ChatCog(commands.Cog, name="Chat"):
         except Exception as e:
             print(f"Error fetching chat history: {e}")
             return []
+
+    def _check_rate_limit(self, user_id: int) -> bool:
+        """Checks if the user has sent less than 20 messages today (IST)."""
+        try:
+            tz_ist = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+            now_ist = datetime.datetime.now(tz_ist)
+            start_of_day = now_ist.replace(hour=0, minute=0, second=0, microsecond=0).isoformat()
+            
+            response = self.supabase.table("chat_history") \
+                .select("id") \
+                .eq("user_id", user_id) \
+                .eq("role", "user") \
+                .gte("created_at", start_of_day) \
+                .execute()
+                
+            return len(response.data) < 20
+        except Exception as e:
+            print(f"Error checking rate limit: {e}")
+            return True # Fail open to avoid blocking users on DB errors
+
 
     # ── LLM API Calls ────────────────────────────────────────
 
@@ -369,14 +398,9 @@ class ChatCog(commands.Cog, name="Chat"):
 
     @commands.command(name="suno")
     async def chat(self, ctx: commands.Context, *, message: str):
-        """Chat with Mikasa using AI. (Owner only)"""
-        if ctx.author.id != BOT_OWNER_ID:
-            embed = discord.Embed(
-                description=f"Hey {ctx.author.mention}, only my master can talk to me! 😠",
-                color=0xFF0000,
-            )
-            embed.set_footer(text="Mikasa Chat", icon_url=MIKASA_ICON)
-            await ctx.send(embed=embed)
+        """Chat with Mikasa using AI."""
+        if not self._check_rate_limit(ctx.author.id) and ctx.author.id != BOT_OWNER_ID:
+            await ctx.message.reply("Ahhh yaar, aj bahut bore ho gaya bata karke... kal baat karte hain na! 😴 (Daily limit of 20 messages reached!)")
             return
 
         async with ctx.typing():
@@ -404,9 +428,7 @@ class ChatCog(commands.Cog, name="Chat"):
 
     @commands.command(name="bye")
     async def end_session(self, ctx: commands.Context):
-        """End the chat session with Mikasa. (Owner only)"""
-        if ctx.author.id != BOT_OWNER_ID:
-            return
+        """End the chat session with Mikasa."""
 
         if ctx.author.id in self.active_sessions:
             self.active_sessions.remove(ctx.author.id)
@@ -429,6 +451,11 @@ class ChatCog(commands.Cog, name="Chat"):
 
                 text = message.content[5:].strip()
                 if not text:
+                    return
+
+                if not self._check_rate_limit(message.author.id) and message.author.id != BOT_OWNER_ID:
+                    await message.reply("Ahhh yaar, aj bahut bore ho gaya bata karke... kal baat karte hain na! 😴 (Daily limit of 20 messages reached!)")
+                    self.active_sessions.remove(message.author.id)
                     return
 
                 async with message.channel.typing():

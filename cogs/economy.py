@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
-from supabase import create_client, Client
+from supabase import create_client, Client, ClientOptions
+import httpx
 import random
 from config import SUPABASE_URL, SUPABASE_KEY
 
@@ -18,7 +19,13 @@ class EconomyCog(commands.Cog, name="Economy"):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self.db: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        
+        http_client = httpx.Client(
+            http2=False,
+            limits=httpx.Limits(max_keepalive_connections=5, keepalive_expiry=5.0)
+        )
+        opts = ClientOptions(httpx_client=http_client)
+        self.db: Client = create_client(SUPABASE_URL, SUPABASE_KEY, options=opts)
 
     # ── helpers ──────────────────────────────────────────────
 
