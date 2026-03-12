@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - Mikasa Bot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #E91E63;
+            --primary-glow: rgba(233, 30, 99, 0.4);
+            --bg: #0f0f13;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --text-main: #e0e0e6;
+            --text-muted: #a0a0b0;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+            border-radius: 20px;
+            box-shadow: 0 0 30px var(--primary-glow);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            padding: 48px;
+            border-radius: 32px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            color: var(--text-muted);
+        }
+
+        li::after {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 2.5rem; }
+            .content { padding: 32px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <img src="https://i.imgur.com/0GfnTBq.png" alt="Mikasa Logo" class="logo">
+            <h1>Terms of Service</h1>
+            <p class="last-updated">Last Updated: March 12, 2026</p>
+        </header>
+
+        <div class="content">
+            <section>
+                <h2>Introduction</h2>
+                <p>Welcome to Mikasa Bot. By adding Mikasa to your Discord server or using its features, you agree to these Terms of Service. Please read them carefully.</p>
+            </section>
+
+            <section>
+                <h2>Usage Policy</h2>
+                <p>You agree to use Mikasa Bot in compliance with Discord's official Terms of Service. Abuse of the bot, including attempts to exploit game mechanics (economy, Pokémon spawning) or disrupt services, may result in a permanent ban from using Mikasa.</p>
+                <ul>
+                    <li>No automated "self-bots" to farm currency.</li>
+                    <li>No harassment of other users through bot features.</li>
+                    <li>No attempts to reverse engineer or hack the bot's infrastructure.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Virtual Currency & Items</h2>
+                <p>Mikasa Cash, Pokémon, and items have no real-world value. They cannot be exchanged for actual currency or goods outside of the Mikasa ecosystem. We reserve the right to reset or modify balances in the event of bugs or balancing updates.</p>
+            </section>
+
+            <section>
+                <h2>Disclaimer</h2>
+                <p>Mikasa Bot is provided "as is" without any warranties. We are not responsible for any data loss, server downtime, or issues arising from the use of the bot.</p>
+            </section>
+
+            <section>
+                <h2>Termination</h2>
+                <p>We reserve the right to terminate access to the bot for any user or server at our discretion, particularly for violations of these terms.</p>
+            </section>
+        </div>
+
+        <footer>
+            <p>&copy; 2026 Mikasa Bot. All rights reserved. <br> <a href="/privacy-policy">Privacy Policy</a></p>
+        </footer>
+    </div>
+</body>
+</html>
