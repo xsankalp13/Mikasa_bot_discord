@@ -444,6 +444,10 @@ class WildEncounterView(discord.ui.View):
             wild_moves=wild_moves,
         )
         self.cog.active_battles[interaction.user.id] = session
+        
+        # Clear encounter flag so new ones can spawn even while this battle lasts
+        if hasattr(self, '_guild_id'):
+            self.cog.encounter_active.pop(self._guild_id, None)
 
         # Update the spawn message
         wild_name = pd.KANTO_POKEMON[self.wild_id]["name"]
